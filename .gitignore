@@ -1,0 +1,31 @@
+# Dependencies and build output
+node_modules/
+dist/
+smoke-output/
+*.zip
+
+# Compiled native helpers (rebuild with `npm run build:native`)
+native/notch-metrics
+native/watch-chat
+native/fill-text
+native/.module-cache/
+
+# Experimental local model
+local-model/.venv/
+local-model/models/
+__pycache__/
+*.pyc
+
+# Secrets and local config — never commit
+.env
+.env.*
+*.key
+*.pem
+*.p12
+secrets.*
+cloud-settings.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

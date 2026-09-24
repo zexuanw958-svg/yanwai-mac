@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="light">
+  <title>言外 · 接好下一句</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="probabilities.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body data-mode="expanded" data-backend="demo" data-placement="top">
+  <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-mark" viewBox="0 0 24 24"><path d="M5 4.5h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8l-6 4v-4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Z"/><path d="M8 9h8M8 13h5"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M15 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></symbol>
+    <symbol id="icon-top" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/></symbol>
+    <symbol id="icon-right" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M15 4v16"/></symbol>
+    <symbol id="icon-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  </svg>
+
+  <button id="expandButton" class="floating-handle" type="button" aria-label="展开言外" title="展开言外 · ⌘⇧J" disabled>
+    <svg class="icon brand-icon" aria-hidden="true"><use href="#icon-mark"/></svg>
+    <span class="brand-name">言外</span><span class="status-dot" aria-hidden="true"></span>
+    <span class="float-spacer"></span><kbd>⌘⇧J</kbd>
+    <svg class="icon float-arrow" aria-hidden="true"><use href="#icon-arrow"/></svg>
+  </button>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><svg class="icon brand-icon" aria-hidden="true"><use href="#icon-mark"/></svg><h1>言外</h1></div>
+      <div class="top-status"><span id="statusDot" class="status-dot" aria-hidden="true"></span><span id="topStatus">示例体验</span></div>
+      <div class="window-controls">
+        <kbd title="显示或收起言外">⌘⇧J</kbd>
+        <div class="placement-control" role="group" aria-label="窗口位置">
+          <button id="placeTop" class="placement-button" type="button" aria-pressed="true" title="贴顶" disabled><svg class="icon" aria-hidden="true"><use href="#icon-top"/></svg><span>贴顶</span></button>
+          <button id="placeRight" class="placement-button" type="button" aria-pressed="false" title="放在右侧" disabled><svg class="icon" aria-hidden="true"><use href="#icon-right"/></svg><span>右侧</span></button>
+        </div>
+        <button id="collapseButton" class="icon-button" type="button" aria-label="收起言外" title="收起 · ⌘⇧J" disabled><svg class="icon" aria-hidden="true"><use href="#icon-minus"/></svg></button>
+        <button id="quitButton" class="icon-button quit-button" type="button" aria-label="退出言外" title="退出言外" disabled><svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg></button>
+      </div>
+    </header>
+
+    <div class="workspace-toolbar">
+      <p class="tagline">听懂一点，<span>从容接话。</span></p>
+      <div class="backend-control" role="group" aria-label="分析方式">
+        <button id="backendDemo" type="button" aria-pressed="true" disabled>示例体验</button>
+        <button id="backendLocal" type="button" aria-pressed="false" disabled>本地模型</button>
+        <button id="backendJev" type="button" aria-pressed="false" disabled>Jev 云端</button>
+      </div>
+    </div>
+
+    <main class="workspace">
+      <section class="input-pane" aria-labelledby="inputHeading">
+        <div class="section-heading"><div><p class="eyebrow">CONVERSATION</p><h2 id="inputHeading">这段对话</h2></div><span id="inputSource" class="source-badge">模拟数据</span></div>
+        <div id="permissionGuide" class="permission-guide" role="region" aria-labelledby="guideTitle" hidden>
+          <div class="guide-top"><strong id="guideTitle">先开两个权限，言外才能跟着微信走</strong><button id="guideDismiss" class="text-button" type="button">稍后再说</button></div>
+          <ol class="guide-steps">
+            <li id="guideScreen"><span class="guide-index">1</span><div class="guide-text"><b>屏幕录制</b><span>读微信窗口上看得见的字，不保存截图</span></div><span id="screenState" class="guide-state">未开启</span><button id="screenGrant" class="guide-button" type="button">去打开</button></li>
+            <li id="guideAx"><span class="guide-index">2</span><div class="guide-text"><b>辅助功能</b><span>把你选的回复填进输入框，不会替你发送</span></div><span id="axState" class="guide-state">未开启</span><button id="axGrant" class="guide-button" type="button">去打开</button></li>
+          </ol>
+          <p id="guideHint" class="guide-hint"></p>
+          <button id="guideRelaunch" class="guide-relaunch" type="button" hidden>开好了，重启言外让屏幕录制生效</button>
+        </div>
+        <div class="example-row" role="group" aria-label="试一段模拟对话">
+          <span class="example-label">试试看</span>
+          <button id="exampleWork" class="example-button" type="button" aria-pressed="true" disabled>职场示例</button>
+          <button id="exampleLife" class="example-button" type="button" aria-pressed="false" disabled>日常示例</button>
+          <button id="exampleRomance" class="example-button" type="button" aria-pressed="false" disabled>恋爱示例</button>
+        </div>
+
+        <div class="editor">
+          <div class="editor-toolbar"><label for="chatInput">对话片段</label><label class="sr-only" for="scenarioSelect">对话场景</label><select id="scenarioSelect"><option value="work">职场</option><option value="life">日常</option><option value="romance">恋爱</option></select></div>
+          <textarea id="chatInput" placeholder="粘贴几句聊天，保留前后文…" spellcheck="false" aria-describedby="modeHint" disabled></textarea>
+          <div class="editor-bottom"><span id="characterCount">0 字</span><button id="pasteButton" class="text-button" type="button" disabled><svg class="icon" aria-hidden="true"><use href="#icon-copy"/></svg>粘贴聊天</button></div>
+        </div>
+
+        <div id="localConnection" class="local-connection" hidden><span class="connection-dot" aria-hidden="true"></span><span id="healthText" role="status">本地模型尚未连接</span><button id="checkConnection" class="text-button" type="button" disabled>检查连接</button></div>
+        <details id="cloudSettings" class="cloud-settings" hidden>
+          <summary><span>Jev 云端设置</span><span id="cloudSummary" class="cloud-summary">未设置 Key</span></summary>
+          <div class="cloud-grid">
+            <label for="judgeProvider">Jev 接口</label>
+            <select id="judgeProvider"></select>
+            <label for="judgeUrl" class="custom-only" data-route="judge">接口地址</label>
+            <input id="judgeUrl" class="custom-only" data-route="judge" type="url" placeholder="https://…/v1/systemone" spellcheck="false" autocomplete="off">
+            <label for="judgeModel">模型名</label>
+            <input id="judgeModel" type="text" spellcheck="false" autocomplete="off">
+            <label for="judgeKey">API Key</label>
+            <input id="judgeKey" type="password" spellcheck="false" autocomplete="off">
+            <label for="replyProvider">候选回复</label>
+            <select id="replyProvider"></select>
+            <label for="replyUrl" class="custom-only" data-route="reply">接口地址</label>
+            <input id="replyUrl" class="custom-only" data-route="reply" type="url" placeholder="https://…/chat/completions" spellcheck="false" autocomplete="off">
+            <label for="replyModel" class="reply-only">模型名</label>
+            <input id="replyModel" class="reply-only" type="text" spellcheck="false" autocomplete="off">
+            <label for="replyKey" class="reply-only">API Key</label>
+            <input id="replyKey" class="reply-only" type="password" spellcheck="false" autocomplete="off">
+          </div>
+          <p id="keyHint" class="cloud-hint"></p>
+          <div class="cloud-actions"><button id="saveCloud" class="text-button" type="button">保存</button><button id="testCloud" class="text-button" type="button">测试连接</button><span id="cloudStatus" role="status"></span></div>
+          <p class="cloud-privacy">云端模式会把这段对话发给你选的服务商。Key 加密存在本机钥匙串，不会显示回来。</p>
+        </details>
+        <p id="modeHint" class="mode-hint">模拟数据。自己的对话请选「本地模型」。</p>
+        <button id="analyzeButton" class="analyze-button" type="button" disabled><span id="analyzeLabel">分析这段</span><svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></button>
+        <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+
+        <div class="following-setting">
+          <span class="source-label" id="sourceLabel">对话来源</span>
+          <div class="source-control" role="group" aria-labelledby="sourceLabel">
+            <button id="sourceManual" type="button" aria-pressed="true" disabled>手动粘贴</button>
+            <button id="sourceClipboard" type="button" aria-pressed="false" disabled>复制或截图</button>
+            <button id="sourceWechat" type="button" aria-pressed="false" disabled>跟随微信</button>
+          </div>
+          <select id="sourceSelect" hidden disabled aria-hidden="true" tabindex="-1"><option value="manual">手动粘贴</option><option value="clipboard">复制或截图</option><option value="wechat">跟随微信</option></select>
+          <p id="sourceStatus" role="status">手动放入对话，不会自动读取。</p>
+          <button id="sourcePermission" class="text-button" type="button" hidden>打开屏幕录制设置</button>
+          <button id="switchToClipboard" class="text-button" type="button" hidden>改用「复制或截图」</button>
+          <button id="fillPermission" class="text-button" type="button" hidden>打开辅助功能设置</button>
+        </div>
+      </section>
+
+      <section id="suggestionPane" class="suggestion-pane" aria-labelledby="suggestionHeading" aria-busy="false">
+        <div class="section-heading"><div><p class="eyebrow">A LITTLE PERSPECTIVE</p><h2 id="suggestionHeading">给下一句，留点余地</h2></div><span id="resultBadge" class="result-badge">模拟数据</span></div>
+
+        <div id="resultPlaceholder" class="result-placeholder">
+          <div class="placeholder-symbol" aria-hidden="true">“</div>
+          <h3 id="placeholderTitle">先看一段职场示例</h3><p id="placeholderText">从可能的意图，到你愿意说出口的话。</p>
+        </div>
+
+        <div id="analysisResult" class="analysis-result" hidden>
+          <section class="intent-section" aria-labelledby="intentHeading"><h3 id="intentHeading"><span class="step-number">01</span>可能的意图</h3><p id="intentText" class="intent-text"></p><p id="uncertainNote" class="uncertain-note" hidden></p><div id="intentDistribution" class="intent-distribution"></div><p id="distributionNote" class="distribution-note"></p></section>
+          <section class="action-section" aria-labelledby="actionHeading"><h3 id="actionHeading"><span class="step-number">02</span>可以怎么接</h3><p id="actionText"></p></section>
+          <section class="replies-section" aria-labelledby="repliesHeading"><div class="replies-heading"><h3 id="repliesHeading"><span class="step-number">03</span>候选表达</h3><span id="replySource" class="reply-source">示例回复</span></div><div id="replyList" class="reply-list"></div></section>
+          <div class="result-notes"><span id="resultDetail">模拟数据 · 仅供参考</span><span id="trimmedNote" hidden>内容较长，仅分析了其中一部分。</span></div>
+        </div>
+
+        <section id="draftCheck" class="draft-check" aria-labelledby="draftHeading" hidden>
+          <h3 id="draftHeading"><span class="step-number">04</span>发之前看一眼</h3>
+          <p class="draft-hint">写下你打算回的那句，Jev 看看它接不接得住。</p>
+          <label class="sr-only" for="draftInput">你打算发的回复</label>
+          <textarea id="draftInput" class="draft-input" rows="2" placeholder="比如：随便，你定吧" spellcheck="false"></textarea>
+          <div class="draft-actions"><button id="draftPaste" class="text-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-copy"/></svg>粘贴</button><button id="draftButton" class="draft-button" type="button">帮我看看</button></div>
+          <div id="draftResult" class="draft-result" hidden aria-live="polite">
+            <div class="draft-score"><strong id="draftLevel"></strong><span id="draftVerdict"></span></div>
+            <div class="draft-meter" aria-hidden="true"><span id="draftMeterBar"></span></div>
+            <ul id="draftFlags" class="draft-flags"></ul>
+            <div id="draftSuggestion" class="draft-suggestion" hidden><div class="draft-suggestion-top"><span>可以这样改</span><button id="draftCopy" class="copy-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-copy"/></svg><span>复制</span></button></div><p id="draftSuggestionText"></p></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer"><span><span class="footer-dot" aria-hidden="true"></span><span id="footerText">本机处理入口 · 不保存对话历史</span></span><span class="footer-signature">言有尽，意有余。</span></footer>
+  </div>
+  <div id="announcement" class="sr-only" role="status" aria-live="polite"></div>
+  <template id="replyTemplate"><article class="reply-card"><div class="reply-card-top"><span class="reply-number"></span><div class="reply-actions"><button class="copy-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-copy"/></svg><span>复制</span></button><button class="fill-button" type="button" title="只填入草稿，发送由你决定">填入</button></div></div><p class="reply-text"></p></article></template>
+</body>
+</html>
